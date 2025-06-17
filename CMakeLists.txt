@@ -235,6 +235,7 @@ else(ROS_EDITION STREQUAL "ROS2")
   find_package(std_msgs REQUIRED)
   find_package(builtin_interfaces REQUIRED)
   find_package(rosidl_default_generators REQUIRED)
+  find_package(message_filters REQUIRED)
 
   # check apr
   find_package(PkgConfig)
@@ -324,6 +325,25 @@ else(ROS_EDITION STREQUAL "ROS2")
     PLUGIN "livox_ros::DriverNode"
     EXECUTABLE ${PROJECT_NAME}_node
   )
+
+  # Add sync_node executable for ROS2
+  ament_auto_add_executable(sync_node_ros2 src/sync_node_ros2.cpp)
+  
+  # Add dependencies for sync_node
+  ament_target_dependencies(sync_node_ros2
+    rclcpp
+    sensor_msgs
+    message_filters
+    ${LIVOX_INTERFACES}
+  )
+  
+  # Link custom message interfaces
+  if(HUMBLE_ROS STREQUAL "humble")
+    target_link_libraries(sync_node_ros2 "${cpp_typesupport_target}")
+  else()
+    add_dependencies(sync_node_ros2 ${LIVOX_INTERFACES})
+    target_link_libraries(sync_node_ros2 ${LIVOX_INTERFACE_TARGET})
+  endif()
 
   if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
